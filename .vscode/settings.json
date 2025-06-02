@@ -1,0 +1,6 @@
+// .vscode/settings.json  (create if missing)
+{
+  "codeGeneration.useInstructionFiles": true,
+  // optional: make Agent Mode run your package scripts & tests
+  "github.copilot.chat.agent.runTasks": true
+}
