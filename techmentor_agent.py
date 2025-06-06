@@ -298,30 +298,38 @@ class TechMentorAgent:
     def get_response(self, prompt: str, provider_override: Optional[str] = None) -> Dict:
         """Main response generation with intelligent routing and domain awareness"""
         start_time = time.time()
-        
-        # Identify relevant domains
         domains = self.identify_domain(prompt)
-        
-        # Determine provider
+
+        # Check for matching specialist agent
+        for domain in domains:
+            if domain in self.specialists:
+                try:
+                    response_text = self.specialists[domain].get_response(prompt)
+                    return {
+                        "response": response_text,
+                        "provider_used": "specialist",
+                        "domains_detected": domains,
+                        "response_time": time.time() - start_time,
+                        "fallback_used": False,
+                        "timestamp": datetime.now().isoformat()
+                    }
+                except Exception as e:
+                    logger.error(f"Error using specialist agent for {domain}: {str(e)}")
+
+        # Fallback to provider logic if no specialist agent applies
         if provider_override and provider_override != "auto":
             provider = provider_override
         else:
             provider = self.select_provider(prompt)
-        
-        # Provider mapping
         provider_functions = {
             "openai": self.call_openai,
             "anthropic": self.call_anthropic,
             "local": self.call_local
         }
-        
-        # Attempt primary provider
         try:
             logger.info(f"Using {provider} provider for {domains} domain(s)")
             response_text = provider_functions[provider](prompt, domains)
-            
             response_time = time.time() - start_time
-            
             return {
                 "response": response_text,
                 "provider_used": provider,
@@ -330,17 +338,13 @@ class TechMentorAgent:
                 "fallback_used": False,
                 "timestamp": datetime.now().isoformat()
             }
-            
         except Exception as e:
             logger.warning(f"{provider} provider failed: {str(e)}")
-            
-            # Fail-over to local if cloud provider failed
             if provider != "local":
                 try:
                     logger.info("Falling back to local AI model")
                     response_text = self.call_local(prompt, domains)
                     response_time = time.time() - start_time
-                    
                     return {
                         "response": response_text,
                         "provider_used": "local",
