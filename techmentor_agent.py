@@ -14,13 +14,13 @@ import textwrap
 import logging
 from typing import Dict, List, Optional, Union
 from datetime import datetime
+from urllib.parse import quote_plus
 
-import requests
 import openai
 import anthropic
-from llama_cpp import Llama
 from dotenv import load_dotenv
 from trucking_database import TruckingDatabase, TruckingCommandParser
+from llama_cpp import Llama
 
 # Load environment variables
 load_dotenv()
@@ -126,6 +126,14 @@ class TechMentorAgent:
                 'analyze', 'review code', 'detailed explanation',
                 'comprehensive', 'document analysis', 'contract',
                 'legal', 'regulation', 'compliance review'
+            ],
+            'trip_analysis_keywords': [
+                # Trip analysis commands
+                'trip summary', 'weekly summary', 'database stats'
+            ],
+            'navigation_keywords': [
+                # Navigation and routing commands
+                'route to', 'directions', 'map to'
             ]
         }
     
@@ -136,7 +144,9 @@ class TechMentorAgent:
             'data_science': DataScienceSpecialist(),
             'ai_ml': AIMLSpecialist(),
             'trucking': TruckingSpecialist(),
-            'teaching': TeachingSpecialist()
+            'teaching': TeachingSpecialist(),
+            'trip_analysis': TripAnalysisAgent(self.trucking_db),
+            'navigation': NavigationAgent(),
         }
     
     def select_provider(self, prompt: str, default: str = "openai") -> str:
@@ -432,6 +442,46 @@ class TeachingSpecialist:
         """Generate practical examples"""
         return f"Practical examples for: {concept}"
 
+class TripAnalysisAgent:
+    """Handles trip analysis queries using TruckingDatabase."""
+    def __init__(self, db: TruckingDatabase):
+        self.db = db
+
+    def get_response(self, prompt: str) -> str:
+        prompt_lower = prompt.lower()
+        if "weekly summary" in prompt_lower:
+            result = self.db.get_weekly_summary()
+            return result.get("summary") or result.get("message", "No data.")
+        elif prompt_lower.startswith("trip summary"):
+            # Extract trip number
+            import re
+            match = re.search(r"trip summary[\s:]*([\d]+)", prompt_lower)
+            if match:
+                trip_number = match.group(1)
+                result = self.db.get_trip_summary(trip_number)
+                return result.get("summary") or result.get("message", "No data.")
+            return "Trip number not found in prompt."
+        elif "database stats" in prompt_lower:
+            result = self.db.get_database_stats()
+            stats = result.get("tables", {})
+            return f"Database stats: {stats}"
+        return "TripAnalysisAgent: Unrecognized prompt."
+
+class NavigationAgent:
+    """Handles navigation and routing queries."""
+    def get_response(self, prompt: str) -> str:
+        prompt_lower = prompt.lower()
+        if prompt_lower.startswith("route to") or prompt_lower.startswith("map to") or prompt_lower.startswith("directions to"):
+            # Extract destination
+            import re
+            match = re.search(r"(?:route|map|directions) to\s+(.+)", prompt_lower)
+            if match:
+                destination = match.group(1).strip()
+                encoded_location = quote_plus(destination)
+                return f"https://www.google.com/maps/dir/?api=1&destination={encoded_location}"
+            return "Destination not found in prompt."
+        return "NavigationAgent: Unrecognized prompt."
+
 def main():
     """Main CLI interface for TechMentor Agent"""
     parser = argparse.ArgumentParser(description="TechMentor AI Agent - Comprehensive Learning Platform")
@@ -503,7 +553,7 @@ Example queries:
                 print(f"""
 🎓 TechMentor Status:
 • Provider: {args.provider}
-• Local model: {'✅ Available' if os.path.exists(agent.local_model_path) else '❌ Not found'}
+• Local model: {'✅ Available' if agent.local_model_path and os.path.exists(agent.local_model_path) else '❌ Not found'}
 • OpenAI: {'✅ Configured' if os.getenv('OPENAI_API_KEY') else '❌ No API key'}
 • Anthropic: {'✅ Configured' if os.getenv('ANTHROPIC_API_KEY') else '❌ No API key'}
 • Domains: Trucking, Data Science, Excel-Python, AI/ML, Teaching
