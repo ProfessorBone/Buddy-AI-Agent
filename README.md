@@ -7,13 +7,37 @@
 ## 🔍 Overview
 TechMentor is a modular, dual-agent system optimized for truckers. It combines a lightweight on-device LLM (Phi-4) with intelligent agent routing and cloud fallback (OpenAI/Anthropic) to manage:
 
-- Trip logging and data capture
-- Navigation with truck-safe routes
-- Automated trip summaries and analysis
-- Voice input (planned)
-- FMCSA compliance monitoring (planned)
+- Trip logging and data capture  
+- Real-time route generation via Google Maps  
+- Local model-based weekly summaries and trip stats  
+- Context-aware agent routing (TripLogger, NavigationAgent, TripAnalysis)  
+- Secure .env configuration for local/cloud models  
 
-Built to run locally on a **Samsung Galaxy phone** using Termux and Python, while syncing development via **VS Code on Mac** with GitHub.
+---
+
+## ✅ Current MVP Capabilities
+
+| Feature             | Status   | Example Query                              |
+|---------------------|----------|--------------------------------------------|
+| Trip Logger Agent   | ✅ Active | `Start trip 49220. Odometer 720110...`     |
+| Navigation Agent    | ✅ Active | `Route to Store 2244 in Tulsa`             |
+| Trip Analysis Agent | 🛠 Partial | `Weekly summary` / `Trip summary 49100`    |
+| Agent Router        | ✅ Active | Auto-directs prompt to correct agent       |
+| Phi-4 Local Model   | ✅ Active | On-device, fast inference                   |
+
+---
+
+## 🔒 Environment Setup
+
+Make sure your `.env` includes:
+```env
+LOCAL_MODEL_PATH=/data/data/com.termux/files/home/models/Phi-4-mini-128k-instruct-q4_k_m.gguf
+OPENAI_API_KEY=your_key
+ANTHROPIC_API_KEY=your_key
+LOG_LEVEL=INFO
+MAX_TOKENS_CLOUD=1000
+MAX_TOKENS_LOCAL=500
+```
 
 ---
 
