@@ -36,8 +36,8 @@ class TechMentorAgent:
     def __init__(self):
         self.setup_models()
         self.setup_routing_rules()
+        self.setup_trucking_database()  # ✅ Must come before specialists
         self.setup_specialists()
-        self.setup_trucking_database()
    
     def setup_trucking_database(self):
         """Initialize trucking database for lightning-fast trip logging"""
