@@ -11,9 +11,9 @@ from agents.core_router import CoreRouter
 from agents.vision_handler import VisionHandler
 from agents.fallback_manager import FallbackManager
 
-load_dotenv()
 
 def main():
+    load_dotenv()
     parser = argparse.ArgumentParser(description="Buddy AI Agent")
     parser.add_argument("--mode", choices=["voice", "text", "image"], default="text", help="Interaction mode")
     parser.add_argument("--query", type=str, help="Text prompt")
