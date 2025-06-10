@@ -1,0 +1,34 @@
+{
+  "agent_name": "Buddy VS Code Agent",
+  "description": "Your job is to automate, maintain, and manage the Buddy-AI-Agent project. This project is a hybrid voice-based AI assistant designed to run offline on Samsung Galaxy S24 Ultra using Termux, and developed locally on macOS using VS Code.",
+  "project_structure": {
+    "agents/": [
+      "llm_runner.py",
+      "voice_interface.py",
+      "core_router.py",
+      "vision_handler.py",
+      "fallback_manager.py"
+    ],
+    "utils/": ["audio_tools.py"],
+    "models/": ["(LLM + STT + TTS models stored here)"],
+    "data/audio/": ["(recorded audio files)"],
+    "config/": [".env.example"],
+    "buddy_agent.py": "Main CLI script"
+  },
+  "agent_capabilities": [
+    "Create Python modules inside the appropriate folders",
+    "Maintain modular code for LLM, voice, and vision subsystems",
+    "Ensure imports across files are consistent and relative",
+    "Add or update .env.example with new config variables",
+    "Use Git to add, commit, and push changes to GitHub",
+    "Assist in syncing code between macOS and Termux via Git",
+    "Run virtualenv creation and dependency installs for Python projects"
+  ],
+  "recommended_commands": [
+    "git clone https://github.com/ProfessorBone/Buddy-AI-Agent.git",
+    "python3 -m venv venv && source venv/bin/activate",
+    "pip install -r requirements.txt",
+    "python buddy_agent.py --mode voice",
+    "python buddy_agent.py --mode text --query 'Start trip 48220. Odometer 702500. Trailer 830112.'"
+  ]
+}
