@@ -54,12 +54,14 @@ def speak(text):
 
 
 def main():
-    print("\U0001F3A4 Buddy is listening. Say your command...")
+    print("🎤 Buddy is loaded. Press Enter to begin voice input...")
 
-    # Create a basic CoreRouter instance (adjust these if needed)
+    # Create a basic CoreRouter instance (adjust as needed)
     router = CoreRouter(llm_runner=None, voice_interface=None)
 
     while True:
+        input("🔘 Press Enter when you're ready to speak...")
+
         text = transcribe_audio_whisper()
 
         if not text:
@@ -70,14 +72,20 @@ def main():
                 print("\n👋 Exiting Buddy.")
                 break
 
-        # Check if command is a trip log
-        if "trip" in text:
+        # Smarter trigger for trip logging
+        if any(kw in text for kw in ["trip", "odometer", "drop trailer", "hook trailer", "from dc", "stop at", "final stop"]):
             response = log_trip_update(text)
         else:
             response = router.route_command(text)
 
-        print(f"\U0001F9E0 Buddy: {response}")
+        print(f"🧠 Buddy: {response}")
         speak(response)
+
+        # Optional: voice-initiated exit
+        if response.lower().startswith("🛑 stopping"):
+            print("👋 Exiting Buddy by voice command.")
+            break
+
 
 
 if __name__ == "__main__":
