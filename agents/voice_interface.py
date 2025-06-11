@@ -1,22 +1,52 @@
-import os
 import subprocess
-from utils.audio_tools import transcribe_audio, speak_text
+import os
+from pathlib import Path
 
-class VoiceInterface:
-    def __init__(self, wake_word="buddy"):  # no wake word detection here yet
-        self.wake_word = wake_word
+PROJECT_DIR = Path.home() / "whisper.cpp"
+RAW_AUDIO = PROJECT_DIR / "raw_input.wav"
+CLEAN_AUDIO = PROJECT_DIR / "clean.wav"
+TEXT_OUTPUT = PROJECT_DIR / "clean.wav.txt"
+WHISPER_CLI = Path.home() / "whisper.cpp/build/bin/whisper-cli"
+MODEL_PATH = PROJECT_DIR / "models/ggml-tiny.en.bin"
 
-    def listen_for_wake_word(self):
-        print("🎤 Buddy is ready. Press ENTER to start recording your command...")
-        while True:
-            input("▶️ Press Enter to record...")
-            self.record_command()
+def transcribe_audio_whisper():
+    # Step 1: Record
+    print("🎤 Recording voice...")
+    subprocess.run([
+        "termux-microphone-record",
+        "-f", str(RAW_AUDIO),
+        "-l", "12",
+        "-e", "aac"
+    ], check=True)
+    
+    # Step 2: Convert to PCM WAV
+    print("🔁 Converting audio...")
+    subprocess.run([
+        "ffmpeg", "-y",
+        "-i", str(RAW_AUDIO),
+        "-acodec", "pcm_s16le",
+        "-ar", "16000",
+        "-ac", "1",
+        str(CLEAN_AUDIO)
+    ], check=True)
+    
+    # Step 3: Transcribe with Whisper
+    print("🧠 Transcribing...")
+    subprocess.run([
+        str(WHISPER_CLI),
+        "-m", str(MODEL_PATH),
+        "-f", str(CLEAN_AUDIO),
+        "-l", "en",
+        "-otxt"
+    ], check=True)
 
-    def record_command(self):
-        print("🎙️ Recording with termux-microphone-record (5 sec)...")
-        audio_path = transcribe_audio.record_to_file(duration=5)
-        command_text = transcribe_audio.transcribe(audio_path)
+    # Step 4: Return result
+    if TEXT_OUTPUT.exists():
+        with open(TEXT_OUTPUT, "r") as f:
+            text = f.read().strip()
+        print(f"✅ Transcription: {text}")
+        return text
+    else:
+        print("❌ Transcription failed: no text file created")
+        return None
 
-        print("📥 Command received:", command_text)
-        response = "Got it! Working on your request..."  # placeholder
-        speak_text(response)
