@@ -1,33 +1,36 @@
-# buddy_agent.py
-"""
-Buddy AI Agent - Voice & Multimodal Assistant for Mobile Deployment
-"""
-import argparse
-import os
-from dotenv import load_dotenv
-from agents.llm_runner import LLMRunner
-from agents.voice_interface import VoiceInterface
-from agents.core_router imporfrom agents.voice_interface import transcribe_audio_whisper from agents.core_router import route_command
+import subprocess
+from agents.voice_interface import transcribe_audio_whisper
+from agents.core_router import CoreRouter
 
-#Buddy voice-powered entry point
+
+def speak(text):
+    """Speak Buddy's response out loud using Termux TTS."""
+    subprocess.run(["termux-tts-speak", text])
+
 
 def main():
-     print("\U0001F3A4 Say your command...")
-     text = transcribe_audio_whisper()
-     if text:
-         response = route_command(text)
-         print(f"\U0001F9E0 Buddy: {response}")
-     else: print("❌ No voice input detected.")
+    print("🎤 Buddy is listening. Say your command...")
 
-if__ name__ == "__main__":
-     main()
+    # Create a basic CoreRouter instance (adjust these if needed)
+    router = CoreRouter(llm_runner=None, voice_interface=None)
 
-t CoreRouter
-from agents.vision_handler import VisionHandler
-from agents.fallback_manager import FallbackManager
-from agents.voice_interface import transcribe_audio_whisper
-from agents.voice_interface import transcribe_audio_whisper from agents.core_router import route_command
+    while True:
+        text = transcribe_audio_whisper()
 
-Buddy voice-powered entry point
+        if not text:
+            print("❌ No voice input detected. Switching to text mode...")
+            try:
+                text = input("⌨️ Type your command: ")
+            except KeyboardInterrupt:
+                print("\n👋 Exiting Buddy.")
+                break
 
-def main(): print("\U0001F3A4 Say your command...") text = transcribe_audio_whisper() if text: response = route_command(text) print(f"\U0001F9E0 Buddy: {response}") else: print("❌ No voice input d
+        response = router.route_command(text)
+        print(f"🧠 Buddy: {response}")
+        speak(response)
+
+
+if __name__ == "__main__":
+    main()
+
+
