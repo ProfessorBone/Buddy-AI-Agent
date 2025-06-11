@@ -1,6 +1,51 @@
 import subprocess
+import json
+from pathlib import Path
+import re
 from agents.voice_interface import transcribe_audio_whisper
 from agents.core_router import CoreRouter
+from trip_manager import log_trip_update
+
+
+LOG_FILE = Path.home() / "trip_log.json"
+
+
+def log_trip(command_text):
+    """Extract trip info and save it to trip_log.json"""
+    trip_data = {}
+
+    # Use regex to extract basic trip info
+    trip_match = re.search(r"trip (\d+)", command_text)
+    odo_match = re.search(r"odometer (\d+)", command_text)
+    trailer_match = re.search(r"trailer (\d+)", command_text)
+    stops_match = re.search(r"(\d+) stop", command_text)
+    type_match = re.search(r"drop|live load|live unload", command_text)
+
+    if trip_match:
+        trip_data["trip_number"] = trip_match.group(1)
+    if odo_match:
+        trip_data["odometer"] = odo_match.group(1)
+    if trailer_match:
+        trip_data["trailer"] = trailer_match.group(1)
+    if stops_match:
+        trip_data["stops"] = stops_match.group(1)
+    if type_match:
+        trip_data["trip_type"] = type_match.group(0).title()
+
+    # Load existing logs
+    if LOG_FILE.exists():
+        with open(LOG_FILE, "r") as f:
+            logs = json.load(f)
+    else:
+        logs = []
+
+    # Add new trip
+    logs.append(trip_data)
+
+    with open(LOG_FILE, "w") as f:
+        json.dump(logs, f, indent=2)
+
+    return trip_data
 
 
 def speak(text):
@@ -9,7 +54,7 @@ def speak(text):
 
 
 def main():
-    print("🎤 Buddy is listening. Say your command...")
+    print("\U0001F3A4 Buddy is listening. Say your command...")
 
     # Create a basic CoreRouter instance (adjust these if needed)
     router = CoreRouter(llm_runner=None, voice_interface=None)
@@ -25,12 +70,19 @@ def main():
                 print("\n👋 Exiting Buddy.")
                 break
 
-        response = router.route_command(text)
-        print(f"🧠 Buddy: {response}")
+        # Check if command is a trip log
+        if "trip" in text:
+            response = log_trip_update(text)
+        else:
+            response = router.route_command(text)
+
+        print(f"\U0001F9E0 Buddy: {response}")
         speak(response)
 
 
 if __name__ == "__main__":
     main()
+
+
 
 
